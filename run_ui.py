@@ -1,5 +1,11 @@
-with open("/workspace/PROOF_FROM_UI.txt", "w") as f:
-    f.write("✅ run_ui.py executed.")
+print("✅ run_ui.py is executing")
+
+def startup_confirmation():
+    return "✅ UI script launched successfully."
+
+import gradio as gr
+import os
+import traceback
 
 import gradio as gr
 import os
@@ -46,4 +52,17 @@ iface = gr.Interface(
 )
 
 iface.launch(server_name="0.0.0.0", server_port=7860)
+
+status_ui = gr.Interface(
+    fn=startup_confirmation,
+    inputs=[],
+    outputs=gr.Textbox(label="Startup Check"),
+)
+
+app = gr.TabbedInterface(
+    [iface, status_ui],
+    tab_names=["Generate", "Startup Check"]
+)
+
+app.launch(server_name="0.0.0.0", server_port=7860)
 
