@@ -1,3 +1,6 @@
+with open("/workspace/PROOF_FROM_UI.txt", "w") as f:
+    f.write("✅ run_ui.py executed.")
+
 import gradio as gr
 import os
 import traceback
