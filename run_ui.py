@@ -1,12 +1,3 @@
-print("✅ run_ui.py is executing")
-
-def startup_confirmation():
-    return "✅ UI script launched successfully."
-
-import gradio as gr
-import os
-import traceback
-
 import gradio as gr
 import os
 import traceback
@@ -15,29 +6,34 @@ def generate_video(prompt, script=None, face_image=None):
     log = []
     output_path = "/workspace/generated/fake_video.mp4"
 
-    try:
-        log.append("📥 Received prompt.")
-        if script:
-            log.append("✍️ Script received.")
-        if face_image is not None:
-            log.append("🧑 Face image received and processed.")
-        else:
-            log.append("⚠️ No face image provided.")
+    log.append("✅ UI function started.")
 
-        log.append("🎞️ Simulating video generation...")
+    try:
+        log.append(f"📥 Prompt received: {prompt}")
+        log.append(f"🧾 Script: {script or 'None'}")
+        log.append(f"🖼️ Face image: {'Yes' if face_image is not None else 'No'}")
+
         os.makedirs("/workspace/generated", exist_ok=True)
+        log.append("📂 Output directory ensured.")
+
         with open(output_path, "wb") as f:
             f.write(b"FAKE VIDEO CONTENT")
+        log.append(f"✅ Dummy video created at: {output_path}")
 
-        log.append("✅ Video generation complete.")
         return "\n".join(log), output_path
 
     except Exception as e:
-        log.append("❌ ERROR:")
+        log.append("❌ ERROR ENCOUNTERED:")
         log.append(traceback.format_exc())
         return "\n".join(log), None
 
-iface = gr.Interface(
+
+def startup_confirmation():
+    return "✅ Startup check successful. UI is running."
+
+
+# 🧠 Interfaces
+main_ui = gr.Interface(
     fn=generate_video,
     inputs=[
         gr.Textbox(label="Prompt"),
@@ -48,19 +44,17 @@ iface = gr.Interface(
         gr.Textbox(label="Process Log"),
         gr.File(label="Download Video")
     ],
-    title="Aivideolab – NSFW AI Video Generator"
 )
 
-iface.launch(server_name="0.0.0.0", server_port=7860)
-
-status_ui = gr.Interface(
+startup_ui = gr.Interface(
     fn=startup_confirmation,
     inputs=[],
-    outputs=gr.Textbox(label="Startup Check"),
+    outputs=gr.Textbox(label="Startup Status")
 )
 
+# 🗂️ Combined view with tabs
 app = gr.TabbedInterface(
-    [iface, status_ui],
+    [main_ui, startup_ui],
     tab_names=["Generate", "Startup Check"]
 )
 
