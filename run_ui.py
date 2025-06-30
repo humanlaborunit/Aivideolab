@@ -2,8 +2,6 @@ import gradio as gr
 import os
 import traceback
 
-print("✅ Starting Aivideolab Interface...")
-
 def generate_video(prompt, script=None, face_image=None):
     log = []
     output_path = "/workspace/generated/fake_video.mp4"
