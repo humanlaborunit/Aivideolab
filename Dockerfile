@@ -1,24 +1,19 @@
-FROM nvidia/cuda:12.2.0-base-ubuntu20.04
+FROM nvidia/cuda:12.2.0-base-ubuntu22.04
 
-# --- ENV + system prep ---
-ENV DEBIAN_FRONTEND=noninteractive
-WORKDIR /workspace
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=Etc/UTC \
+    PYTHONUNBUFFERED=1
 
-# --- System dependencies ---
 RUN apt-get update && apt-get install -y \
-    git wget curl ffmpeg python3 python3-pip python3-venv \
-    libgl1 libglib2.0-0 libsm6 libxext6 libxrender-dev \
-    && apt-get clean
+    python3 python3-pip git ffmpeg curl wget unzip libgl1 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# --- Python dependencies ---
-COPY requirements.txt .
-RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
-# --- App files ---
-COPY launch.sh /workspace/launch.sh
-COPY run_ui.py /workspace/run_ui.py
+WORKDIR /app
+COPY . .
 
-# --- Permissions & startup ---
-RUN chmod +x /workspace/launch.sh
-EXPOSE 7860
-CMD ["/workspace/launch.sh"]
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+EXPOSE 3000
+CMD ["python", "run_ui.py"]
