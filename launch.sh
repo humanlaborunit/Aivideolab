@@ -1,16 +1,11 @@
 #!/bin/bash
+set -e
 
-echo "=== Starting launch.sh ==="
+echo "🚀 Launching Aivideolab..."
 
-cd /app || {
-    echo "❌ ERROR: /app not found"
-    exit 1
-}
+# Optional: update pip and install dependencies again in case of dynamic pods
+pip install --upgrade pip
+pip install -r requirements.txt
 
-echo "Installing Python dependencies..."
-pip3 install --upgrade pip
-pip3 install -r requirements.txt
-
-echo "Starting the NSFW Video App..."
-python3 run_ui.py
-
+echo "📁 Starting server from run_ui.py..."
+python3 /app/run_ui.py
