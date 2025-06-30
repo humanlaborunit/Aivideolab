@@ -1,35 +1,47 @@
 import gradio as gr
 import os
+import traceback
 
-def process(prompt, script=None, image=None):
-    steps = []
-    steps.append(f"✅ Prompt received: {prompt}")
-    if script:
-        steps.append("📝 Script input detected.")
-    if image:
-        steps.append("🖼️ Face image uploaded.")
+print("✅ Starting Aivideolab Interface...")
+
+def generate_video(prompt, script=None, face_image=None):
+    log = []
+    output_path = "/workspace/generated/fake_video.mp4"
 
     try:
-        steps.append("🚀 Generating video...")
-        steps.append("✅ Video generation complete.")
-    except Exception as e:
-        steps.append(f"❌ Error: {str(e)}")
+        log.append("📥 Received prompt.")
+        if script:
+            log.append("✍️ Script received.")
+        if face_image is not None:
+            log.append("🧑 Face image received and processed.")
+        else:
+            log.append("⚠️ No face image provided.")
 
-    return "\n".join(steps), "https://example.com/fake_video.mp4"
+        log.append("🎞️ Simulating video generation...")
+        os.makedirs("/workspace/generated", exist_ok=True)
+        with open(output_path, "wb") as f:
+            f.write(b"FAKE VIDEO CONTENT")
+
+        log.append("✅ Video generation complete.")
+        return "\n".join(log), output_path
+
+    except Exception as e:
+        log.append("❌ ERROR:")
+        log.append(traceback.format_exc())
+        return "\n".join(log), None
 
 iface = gr.Interface(
-    fn=process,
+    fn=generate_video,
     inputs=[
         gr.Textbox(label="Prompt"),
-        gr.Textbox(label="Script (Optional)"),
-        gr.Image(type="filepath", label="Face Image (Optional)")
+        gr.Textbox(label="Optional Script"),
+        gr.Image(label="Optional Face Image", type="numpy", optional=True)
     ],
     outputs=[
-        gr.Textbox(label="Status Log"),
-        gr.Textbox(label="Download Link")
+        gr.Textbox(label="Process Log"),
+        gr.File(label="Download Video")
     ],
-    title="NSFW AI Video Generator",
-    description="Enter a prompt, script, and image to generate a video.",
+    title="Aivideolab – NSFW AI Video Generator"
 )
 
-iface.launch(server_name="0.0.0.0", server_port=3000)
+iface.launch(server_name="0.0.0.0", server_port=7860)
