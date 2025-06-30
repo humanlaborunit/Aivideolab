@@ -31,8 +31,9 @@ RUN git clone https://github.com/neuralchen/SimSwap.git /app/SimSwap && \
 # ------------------------
 # Download Real-ESRGAN binary (for enhancement)
 # ------------------------
-RUN wget https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan/releases/download/v0.1.5/realesrgan-ncnn-vulkan-20220424-ubuntu.zip && \
-    unzip realesrgan-ncnn-vulkan-20220424-ubuntu.zip -d /app/realesrgan && \
+RUN pip3 install gdown && \
+    gdown https://drive.google.com/uc?id=1vPghGnVaTX-iY5N_8MdXQ70I9ib7KU84 -O /app/realesrgan.zip && \
+    unzip /app/realesrgan.zip -d /app/realesrgan && \
     chmod +x /app/realesrgan/realesrgan-ncnn-vulkan
 
 # ------------------------
