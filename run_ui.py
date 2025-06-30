@@ -1,45 +1,31 @@
 import gradio as gr
 import os
-import traceback
 
-def generate_video(prompt, script=None, face_image=None):
-    log = []
-    output_path = "/workspace/generated/fake_video.mp4"
+# --- Deepfake Mode (from image) ---
+def generate_deepfake(face_image, script_text, voice_sample=None):
+    # Placeholder function for deepfake logic
+    return f"✅ Deepfake video generated with script: {script_text[:30]}..."
 
-    try:
-        log.append("📥 Received prompt.")
-        if script:
-            log.append("✍️ Script received.")
-        if face_image is not None:
-            log.append("🧑 Face image received and processed.")
-        else:
-            log.append("⚠️ No face image provided.")
+# --- Prompt-to-Video Mode ---
+def generate_from_prompt(prompt_text):
+    # Placeholder for prompt-to-video logic
+    return f"✅ Generated video from prompt: {prompt_text[:30]}..."
 
-        log.append("🎞️ Simulating video generation...")
-        os.makedirs("/workspace/generated", exist_ok=True)
-        with open(output_path, "wb") as f:
-            f.write(b"FAKE VIDEO CONTENT")
+with gr.Blocks(css=".gradio-container { max-width: 800px !important; }") as app:
+    gr.Markdown("## 🎥 Aivideolab NSFW Video Generator")
 
-        log.append("✅ Video generation complete.")
-        return "\n".join(log), output_path
+    with gr.Tab("📸 Deepfake from Image"):
+        face = gr.Image(type="filepath", label="Upload Face Image")
+        script = gr.Textbox(lines=4, label="Custom Script")
+        voice = gr.Audio(source="upload", type="filepath", label="Optional Voice Clone")
+        deepfake_btn = gr.Button("Generate Deepfake")
+        deepfake_output = gr.Textbox(label="Output")
+        deepfake_btn.click(fn=generate_deepfake, inputs=[face, script, voice], outputs=deepfake_output)
 
-    except Exception as e:
-        log.append("❌ ERROR:")
-        log.append(traceback.format_exc())
-        return "\n".join(log), None
+    with gr.Tab("✍️ Prompt to Video"):
+        prompt_input = gr.Textbox(lines=4, label="Describe the Scene")
+        prompt_btn = gr.Button("Generate")
+        prompt_output = gr.Textbox(label="Output")
+        prompt_btn.click(fn=generate_from_prompt, inputs=prompt_input, outputs=prompt_output)
 
-iface = gr.Interface(
-    fn=generate_video,
-    inputs=[
-        gr.Textbox(label="Prompt"),
-        gr.Textbox(label="Optional Script"),
-        gr.Image(label="Optional Face Image", type="numpy", optional=True)
-    ],
-    outputs=[
-        gr.Textbox(label="Process Log"),
-        gr.File(label="Download Video")
-    ],
-    title="Aivideolab – NSFW AI Video Generator"
-)
-
-iface.launch(server_name="0.0.0.0", server_port=7860)
+app.launch(server_name="0.0.0.0", server_port=7860)
