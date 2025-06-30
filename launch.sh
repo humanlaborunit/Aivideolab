@@ -1,11 +1,16 @@
 #!/bin/bash
-cd /app || exit
 
-echo "============== STARTING Aivideolab CONTAINER =============="
-echo "PWD: $(pwd)"
-echo "Contents of /app:"
-ls -la /app
+echo "=== Starting launch.sh ==="
 
-echo "==================== RUNNING APP ==========================="
-python3 run_ui.py --host 0.0.0.0 --port 7860
+cd /app || {
+    echo "❌ ERROR: /app not found"
+    exit 1
+}
+
+echo "Installing Python dependencies..."
+pip3 install --upgrade pip
+pip3 install -r requirements.txt
+
+echo "Starting the NSFW Video App..."
+python3 run_ui.py
 
