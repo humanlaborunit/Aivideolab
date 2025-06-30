@@ -1,33 +1,25 @@
-FROM python:3.10-slim
+FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    GRADIO_SERVER_NAME=0.0.0.0 \
-    GRADIO_SERVER_PORT=7860
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Create working directory
 WORKDIR /app
 
-# Install OS-level dependencies
+# Install base packages
 RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    git \
-    curl \
-    libgl1 \
-    libglib2.0-0 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git ffmpeg libsm6 libxext6 curl wget unzip python3 python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Install Python packages
 COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
 
-# Copy full app code into container
+# Copy app code
 COPY . /app
 
-# Expose port for Gradio
-EXPOSE 7860
+# Make launch script executable
+RUN chmod +x /app/launch.sh
 
-# Launch script on container start
+# Expose port for Gradio
+EXPOSE 3000
+
 CMD ["/app/launch.sh"]
