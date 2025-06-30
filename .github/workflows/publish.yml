@@ -6,18 +6,15 @@ on:
 jobs:
   make-public:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
       - name: Get package ID
-        id: get_package_id
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           PACKAGE_ID=$(gh api graphql -f query='
-            {
-              repository(owner: "'${{ github.repository_owner }}'", name: "'${{ github.event.repository.name }}'") {
-                packages(first: 10) {
+            query {
+              repository(owner: "humanlaborunit", name: "Aivideolab") {
+                packages(first: 1) {
                   nodes {
                     id
                     name
@@ -26,12 +23,13 @@ jobs:
               }
             }
           ' --jq '.data.repository.packages.nodes[0].id')
-          echo "PACKAGE_ID=$PACKAGE_ID" >> $GITHUB_ENV
-          echo "Found package ID: $PACKAGE_ID"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Make package public
+          echo "Found package ID: $PACKAGE_ID"
+          echo "PACKAGE_ID=$PACKAGE_ID" >> $GITHUB_ENV
+
+      - name: Make image public
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           gh api graphql -f query='
             mutation {
@@ -46,7 +44,4 @@ jobs:
               }
             }
           '
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGE_ID: ${{ env.PACKAGE_ID }}
 
