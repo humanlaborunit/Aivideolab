@@ -6,28 +6,63 @@ on:
       - main
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
-
     permissions:
-      contents: read
       packages: write
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and tag Docker image
-        run: |
-          docker build . -t ghcr.io/humanlaborunit/aivideolab:latest
+      - name: Build Docker image
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/aivideolab:latest .
 
-      - name: Push Docker image to GHCR
+      - name: Push Docker image
+        run: docker push ghcr.io/${{ github.repository_owner }}/aivideolab:latest
+
+      - name: Make image public
         run: |
-          docker push ghcr.io/humanlaborunit/aivideolab:latest
+          PACKAGE_NAME="aivideolab"
+          REPO_OWNER="${{ github.repository_owner }}"
+          GH_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          
+          PACKAGE_ID=$(gh api graphql -f query='
+            query {
+              repository(owner: "'$REPO_OWNER'", name: "aivideolab") {
+                packages(first: 10, packageType: CONTAINER) {
+                  nodes {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          ' --jq '.data.repository.packages.nodes[] | select(.name=="'$PACKAGE_NAME'") | .id')
+
+          echo "Found package ID: $PACKAGE_ID"
+
+          gh api graphql -f query='
+            mutation {
+              changePackageVisibility(input: {
+                packageId: "'$PACKAGE_ID'",
+                visibility: PUBLIC
+              }) {
+                package {
+                  name
+                  visibility
+                }
+              }
+            }
+          '
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
