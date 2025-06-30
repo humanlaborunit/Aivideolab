@@ -1,10 +1,10 @@
 #!/bin/bash
 
-cd /workspace || cd / || exit
+# Launch script for RunPod container
+echo "🌐 Launching Aivideolab..."
 
-echo "🚀 Launching Aivideolab NSFW AI Video Engine..."
-echo "📂 Current files:"
-ls -la
+# Make sure output folder exists
+mkdir -p /workspace/generated
 
-echo "🧠 Running interface..."
-python3 run_ui.py --host 0.0.0.0 --port 7860 --nsfw --deepfake --script --voice 2>&1 | tee /workspace/logs.txt
+# Run the Gradio app
+python3 /workspace/run_ui.py --share --port 7860 --server-name 0.0.0.0
