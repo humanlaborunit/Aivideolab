@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements and install Python packages
 # ------------------------
 COPY requirements.txt .
-RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
+RUN pip3 install --upgrade pip && pip3 install -r requirements.txt && pip3 install TTS==0.18.0
 
 # ------------------------
 # Clone SimSwap (Face Swap - CLI callable)
