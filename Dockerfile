@@ -29,9 +29,12 @@ RUN git clone https://github.com/neuralchen/SimSwap.git /app/SimSwap && \
         https://github.com/neuralchen/SimSwap/releases/download/1.0/people_model.pth
 
 # ------------------------
-# Clone a fully unpacked Real-ESRGAN Vulkan repo (no zip or tar)
-RUN git clone https://huggingface.co/datasets/kjk4356/realesrgan-ncnn-vulkan /app/realesrgan && \
-    chmod +x /app/realesrgan/realesrgan-ncnn-vulkan
+# Download ESRGAN binary from reliable mirror
+RUN mkdir -p /app/realesrgan && \
+    curl -L -o /app/realesrgan/realesrgan-ncnn-vulkan https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan-ncnn-vulkan && \
+    chmod +x /app/realesrgan/realesrgan-ncnn-vulkan && \
+    curl -L -o /app/realesrgan/realesrgan.param https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan.param && \
+    curl -L -o /app/realesrgan/realesrgan.bin https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan.bin
 
 # ------------------------
 # Clone RIFE for frame interpolation
