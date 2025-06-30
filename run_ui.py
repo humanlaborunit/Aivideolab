@@ -1,72 +1,61 @@
 import gradio as gr
-import os
-import traceback
-from modules.video_gen import generate_video_from_prompt
-from modules.deepfake import generate_deepfake_video
-from modules.voice_clone import clone_voice
-from modules.logger import log_message
+from video_gen import generate_full_video
+from voice_clone import clone_voice
+from face_swap import run_face_swap
 
-RESULTS_DIR = "results"
-os.makedirs(RESULTS_DIR, exist_ok=True)
+LOGS = []
 
-def handle_prompt_to_video(prompt, script_text):
+def log(msg):
+    print(msg)
+    LOGS.append(msg)
+    return "\n".join(LOGS[-50:])
+
+def generate_video_ui(prompt, script, face_image, voice_sample):
+    LOGS.clear()
     try:
-        log_message("Prompt received", prompt)
-        video_path = generate_video_from_prompt(prompt, script_text)
-        log_message("Video generated at", video_path)
-        return video_path, "Video created successfully!"
+        log("🧠 Starting generation process...")
+        log("📜 Step 1: Cloning voice...")
+        voice_path = clone_voice(script, voice_sample)
+        log(f"✅ Voice cloned: {voice_path}")
+
+        log("🎞 Step 2: Generating video from prompt...")
+        base_video = generate_full_video(prompt, voice_path)
+        log(f"✅ Base video generated: {base_video}")
+
+        if face_image:
+            log("😶 Step 3: Running face swap...")
+            swapped_video = run_face_swap(base_video, face_image)
+            log(f"✅ Face-swapped video created: {swapped_video}")
+        else:
+            swapped_video = base_video
+            log("⚠️ No face image provided — skipping face swap.")
+
+        log("🎉 All steps completed.")
+        return swapped_video, log("✅ Done!")
     except Exception as e:
-        error = traceback.format_exc()
-        log_message("ERROR", error)
-        return None, f"Failed: {e}"
+        return None, log(f"❌ Error: {e}")
 
-def handle_deepfake(face_image, script_text):
-    try:
-        log_message("Deepfake requested", face_image.name)
-        video_path = generate_deepfake_video(face_image, script_text)
-        log_message("Deepfake complete", video_path)
-        return video_path, "Deepfake video created."
-    except Exception as e:
-        error = traceback.format_exc()
-        log_message("ERROR", error)
-        return None, f"Failed: {e}"
+with gr.Blocks(css=".gradio-container { max-width: 100% !important; }") as demo:
+    gr.Markdown("## 🎬 AI Video Generator (NSFW Enabled by Default)")
 
-def handle_voice_clone(audio_file):
-    try:
-        log_message("Cloning voice from", audio_file.name)
-        output_path = clone_voice(audio_file)
-        log_message("Voice cloned", output_path)
-        return output_path
-    except Exception as e:
-        error = traceback.format_exc()
-        log_message("ERROR", error)
-        return None
+    with gr.Row():
+        prompt = gr.Textbox(label="Text Prompt (Scene/Setting)", placeholder="A realistic scene of...")
+        script = gr.Textbox(label="Script (Spoken in Video)", placeholder="Enter the spoken dialogue")
 
-with gr.Blocks(title="Aivideolab") as demo:
-    gr.Markdown("## 🎬 Aivideolab - NSFW AI Video Generator")
-    with gr.Tab("Prompt to Video"):
-        prompt = gr.Textbox(label="Enter your video prompt")
-        script = gr.Textbox(label="Optional: Add script for voice")
-        gen_btn = gr.Button("Generate Video")
-        gen_output = gr.Video()
-        gen_status = gr.Textbox()
-        gen_btn.click(handle_prompt_to_video, inputs=[prompt, script], outputs=[gen_output, gen_status])
+    with gr.Row():
+        face_image = gr.Image(label="Optional Face Image (for Deepfake)", type="filepath")
+        voice_sample = gr.Audio(label="Optional Voice Sample (for cloning)", type="filepath")
 
-    with gr.Tab("Deepfake from Image"):
-        face = gr.Image(label="Upload face image")
-        script2 = gr.Textbox(label="Script for deepfake video")
-        fake_btn = gr.Button("Generate Deepfake")
-        fake_output = gr.Video()
-        fake_status = gr.Textbox()
-        fake_btn.click(handle_deepfake, inputs=[face, script2], outputs=[fake_output, fake_status])
+    with gr.Row():
+        generate_btn = gr.Button("Generate Video")
+        output_video = gr.Video(label="📤 Final Video Output")
+    
+    logs_output = gr.Textbox(label="🔍 Logs / Progress", lines=15)
 
-    with gr.Tab("Voice Clone"):
-        audio = gr.Audio(label="Upload voice to clone", type="filepath")
-        voice_btn = gr.Button("Clone Voice")
-        voice_output = gr.Audio()
-        voice_btn.click(handle_voice_clone, inputs=[audio], outputs=voice_output)
+    generate_btn.click(
+        fn=generate_video_ui,
+        inputs=[prompt, script, face_image, voice_sample],
+        outputs=[output_video, logs_output]
+    )
 
-    with gr.Accordion("📜 Logs"):
-        gr.Textbox(label="System Logs (check RunPod logs for full detail)", value="Logs output will stream to backend logs.")
-
-demo.launch()
+demo.launch(server_port=3000, server_name="0.0.0.0")
