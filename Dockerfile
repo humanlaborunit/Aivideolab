@@ -1,25 +1,65 @@
 FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-
 WORKDIR /app
 
-# Install base packages
+# ------------------------
+# Install system packages
+# ------------------------
 RUN apt-get update && apt-get install -y \
-    git ffmpeg libsm6 libxext6 curl wget unzip python3 python3-pip \
+    python3 python3-pip git ffmpeg wget curl unzip \
+    libsm6 libxext6 libgl1 libglib2.0-0 \
+    cmake build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
+# ------------------------
+# Install Python deps
+# ------------------------
 COPY requirements.txt .
 RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
 
-# Copy app code
+# ------------------------
+# Clone & install SimSwap
+# ------------------------
+RUN git clone https://github.com/neuralchen/SimSwap.git /app/SimSwap && \
+    cd /app/SimSwap && \
+    pip3 install -r requirements.txt && \
+    mkdir -p /app/SimSwap/checkpoints && \
+    curl -L -o /app/SimSwap/checkpoints/arcface_checkpoint.tar \
+        https://github.com/neuralchen/SimSwap/releases/download/1.0/arcface_checkpoint.tar && \
+    curl -L -o /app/SimSwap/checkpoints/people_model.pth \
+        https://github.com/neuralchen/SimSwap/releases/download/1.0/people_model.pth
+
+# ------------------------
+# Download Real-ESRGAN binary
+# ------------------------
+RUN wget https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan/releases/download/v0.1.5/realesrgan-ncnn-vulkan-20220424-ubuntu.zip && \
+    unzip realesrgan-ncnn-vulkan-20220424-ubuntu.zip -d /app/realesrgan && \
+    chmod +x /app/realesrgan/realesrgan-ncnn-vulkan
+
+# ------------------------
+# Clone RIFE for frame interpolation
+# ------------------------
+RUN git clone https://github.com/megvii-research/ECCV2022-RIFE.git /app/rife && \
+    cd /app/rife && \
+    wget https://github.com/megvii-research/ECCV2022-RIFE/releases/download/v1.0/RIFE_trained_model_HDv3.pkl
+
+# ------------------------
+# Copy full app code
+# ------------------------
 COPY . /app
 
+# ------------------------
 # Make launch script executable
+# ------------------------
 RUN chmod +x /app/launch.sh
 
-# Expose port for Gradio
+# ------------------------
+# Expose Gradio port
+# ------------------------
 EXPOSE 3000
 
+# ------------------------
+# Start App
+# ------------------------
 CMD ["/app/launch.sh"]
