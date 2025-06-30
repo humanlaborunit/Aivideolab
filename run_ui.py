@@ -1,115 +1,68 @@
 import os
 import gradio as gr
-import subprocess
-import uuid
-import shutil
+import traceback
+import time
+from utils.video_generator import generate_video_from_prompt
+from utils.deepfake_face_swap import swap_face
+from utils.voice_cloner import clone_and_generate_voice
+from utils.logger import log_step
 
-# Directories for all outputs
-os.makedirs("outputs", exist_ok=True)
-os.makedirs("logs", exist_ok=True)
+def generate_all(prompt, face_image, audio_file, script_text):
+    try:
+        log_step("🟡 Starting generation process...")
 
-def log_step(step_msg):
-    with open("logs/latest_log.txt", "a") as f:
-        f.write(f"{step_msg}\n")
+        # Step 1: Generate video from prompt
+        log_step("🟡 Generating base video from prompt...")
+        base_video_path = generate_video_from_prompt(prompt)
+        log_step(f"🟢 Prompt video generated: {base_video_path}")
 
-def reset_logs():
-    with open("logs/latest_log.txt", "w") as f:
-        f.write("== GENERATION START ==\n")
+        # Step 2: Swap face if image provided
+        if face_image:
+            log_step("🟡 Performing face swap...")
+            base_video_path = swap_face(base_video_path, face_image)
+            log_step(f"🟢 Face swapped: {base_video_path}")
 
-def generate_video(prompt, script, face_image, audio_file):
-    reset_logs()
-    job_id = str(uuid.uuid4())[:8]
-    output_dir = f"outputs/{job_id}"
-    os.makedirs(output_dir, exist_ok=True)
+        # Step 3: Generate audio from script or use uploaded audio
+        if script_text:
+            log_step("🟡 Generating voice from script...")
+            audio_path = clone_and_generate_voice(script_text=script_text)
+            log_step(f"🟢 Voice generated: {audio_path}")
+        elif audio_file:
+            log_step("🟡 Using uploaded voice file...")
+            audio_path = audio_file
+            log_step(f"🟢 Voice file selected: {audio_path}")
+        else:
+            log_step("🟡 No audio provided. Using silent video.")
+            audio_path = None
 
-    log_step(f"Step 1: Prompt received: {prompt}")
-    log_step(f"Step 2: Script received: {script[:60]}...")
+        # Step 4: Merge audio and video
+        log_step("🟡 Finalizing video output...")
+        output_path = f"outputs/final_{int(time.time())}.mp4"
+        cmd = f"ffmpeg -y -i {base_video_path} {'-i ' + audio_path + ' -c:v copy -c:a aac' if audio_path else '-c copy'} {output_path}"
+        os.system(cmd)
+        log_step(f"🟢 Final video created: {output_path}")
 
-    face_path = "input_face.png"
-    if face_image:
-        face_image.save(face_path)
-        log_step("Step 3: Face image saved.")
-    else:
-        return "Error: No face image provided.", None, "logs/latest_log.txt"
+        return output_path, open("log.txt").read()
+    
+    except Exception as e:
+        error_msg = f"🔴 Error occurred:\n{traceback.format_exc()}"
+        log_step(error_msg)
+        return None, error_msg
 
-    if script:
-        with open(f"{output_dir}/script.txt", "w") as f:
-            f.write(script)
-
-    audio_path = ""
-    if audio_file:
-        audio_path = os.path.join(output_dir, "voice.wav")
-        shutil.copy(audio_file, audio_path)
-        log_step("Step 4: Uploaded voice cloned.")
-    else:
-        audio_path = os.path.join(output_dir, "voice_bark.wav")
-        log_step("Step 4: Generating voice with Bark...")
-        subprocess.run([
-            "python3", "modules/bark_gen.py",
-            "--text", script,
-            "--output", audio_path
-        ])
-        log_step("✓ Voice generation complete.")
-
-    log_step("Step 5: Generating face motion with SadTalker...")
-    subprocess.run([
-        "python3", "modules/sadtalker_gen.py",
-        "--face", face_path,
-        "--audio", audio_path,
-        "--output_dir", output_dir
-    ])
-    log_step("✓ Face animation complete.")
-
-    log_step("Step 6: Running Wav2Lip sync...")
-    subprocess.run([
-        "python3", "modules/wav2lip_sync.py",
-        "--video", f"{output_dir}/sadtalker_output.mp4",
-        "--audio", audio_path,
-        "--output", f"{output_dir}/final_lipsync.mp4"
-    ])
-    log_step("✓ Wav2Lip processing complete.")
-
-    log_step("Step 7: Running AnimateDiff video from prompt...")
-    subprocess.run([
-        "python3", "modules/animatediff_gen.py",
-        "--prompt", prompt,
-        "--output", f"{output_dir}/prompt2vid.mp4"
-    ])
-    log_step("✓ Prompt-to-video complete.")
-
-    log_step("Step 8: Merging all elements...")
-    final_path = f"{output_dir}/final_output.mp4"
-    subprocess.run([
-        "ffmpeg", "-y",
-        "-i", f"{output_dir}/prompt2vid.mp4",
-        "-i", f"{output_dir}/final_lipsync.mp4",
-        "-filter_complex", "[0:v][1:v]hstack=inputs=2[v]",
-        "-map", "[v]", "-map", "1:a",
-        "-c:v", "libx264", "-c:a", "aac",
-        final_path
-    ])
-    log_step("✓ Final video rendered.")
-
-    return "✓ Generation complete", final_path, "logs/latest_log.txt"
-
-with gr.Blocks() as demo:
-    gr.Markdown("## 🎬 AI Video Lab — NSFW Video Generator")
+# Gradio UI
+with gr.Blocks(title="AI Video Generator") as demo:
+    gr.Markdown("# 🎬 AI Video Generator (NSFW-Enabled)")
     with gr.Row():
-        with gr.Column():
-            prompt = gr.Textbox(label="Prompt (e.g. 'Realistic female model doing yoga')")
-            script = gr.Textbox(label="Spoken Script", lines=3)
-            face_image = gr.Image(label="Upload Face Image", type="pil")
-            audio_file = gr.Audio(label="Upload Voice Audio (Optional)", type="filepath")
-            submit_btn = gr.Button("Generate Video 🔥")
-        with gr.Column():
-            status = gr.Textbox(label="Status")
-            final_video = gr.Video(label="Generated Video", format="mp4")
-            log_output = gr.File(label="View Generation Log")
+        prompt = gr.Textbox(label="Enter Video Prompt", placeholder="A hyper-realistic scene...")
+        face_image = gr.Image(type="filepath", label="Optional: Face Image (for deepfake)")
+    with gr.Row():
+        audio_file = gr.Audio(type="filepath", label="Optional: Upload voice audio (MP3/WAV)")
+        script_text = gr.Textbox(label="Optional: Script text (will be converted to voice)", lines=3)
 
-    submit_btn.click(
-        generate_video,
-        inputs=[prompt, script, face_image, audio_file],
-        outputs=[status, final_video, log_output]
-    )
+    btn = gr.Button("Generate Video")
+    output_video = gr.Video(label="Generated Video")
+    logs = gr.Textbox(label="Process Log", lines=15)
+
+    btn.click(fn=generate_all, inputs=[prompt, face_image, audio_file, script_text], outputs=[output_video, logs])
 
 demo.launch(server_name="0.0.0.0", server_port=7860)
