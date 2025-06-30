@@ -22,8 +22,6 @@ RUN pip3 install --upgrade pip && pip3 install -r requirements.txt && pip3 insta
 # Clone SimSwap (Face Swap - CLI callable)
 # ------------------------
 RUN git clone https://github.com/neuralchen/SimSwap.git /app/SimSwap && \
-    cd /app/SimSwap && \
-    pip3 install -r requirements.txt && \
     mkdir -p /app/SimSwap/checkpoints && \
     curl -L -o /app/SimSwap/checkpoints/arcface_checkpoint.tar \
         https://github.com/neuralchen/SimSwap/releases/download/1.0/arcface_checkpoint.tar && \
