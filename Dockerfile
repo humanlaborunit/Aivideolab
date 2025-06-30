@@ -51,7 +51,7 @@ COPY . /app
 # ------------------------
 # Make launch script executable
 # ------------------------
-RUN chmod +x /app/launch.sh
+RUN chmod 755 /app/launch.sh && ls -l /app/launch.sh
 
 # ------------------------
 # Expose Gradio port
