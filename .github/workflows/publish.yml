@@ -8,19 +8,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Authenticate with GitHub CLI
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Get package ID
-        id: get_id
+        id: get_package_id
         run: |
           PACKAGE_ID=$(gh api graphql -f query='
-            query {
-              repository(owner: "humanlaborunit", name: "Aivideolab") {
-                packages(first: 1, packageType: CONTAINER) {
+            {
+              repository(owner: "'${{ github.repository_owner }}'", name: "'${{ github.event.repository.name }}'") {
+                packages(first: 10) {
                   nodes {
                     id
                     name
@@ -29,16 +26,17 @@ jobs:
               }
             }
           ' --jq '.data.repository.packages.nodes[0].id')
-          echo "Found package ID: $PACKAGE_ID"
           echo "PACKAGE_ID=$PACKAGE_ID" >> $GITHUB_ENV
+          echo "Found package ID: $PACKAGE_ID"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Make package public
         run: |
           gh api graphql -f query='
             mutation {
               changePackageVisibility(input: {
-                packageId: "'"$PACKAGE_ID"'",
-                packageType: CONTAINER,
+                packageId: "'${PACKAGE_ID}'",
                 visibility: PUBLIC
               }) {
                 package {
@@ -50,4 +48,5 @@ jobs:
           '
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE_ID: ${{ env.PACKAGE_ID }}
 
