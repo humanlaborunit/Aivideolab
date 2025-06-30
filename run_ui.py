@@ -1,67 +1,72 @@
 import gradio as gr
 import os
-import traceback
 import uuid
-from PIL import Image
-import numpy as np
+import traceback
 
-# Directory to save generated videos
 OUTPUT_DIR = "/workspace/generated"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def generate_video(prompt, script=None, face_image=None, voice_audio=None):
     log = []
-    output_filename = f"{uuid.uuid4()}.mp4"
-    output_path = os.path.join(OUTPUT_DIR, output_filename)
+    log.append("📥 Prompt received.")
+    session_id = str(uuid.uuid4())[:8]
+    video_path = os.path.join(OUTPUT_DIR, f"{session_id}_output.mp4")
 
     try:
-        log.append("📥 Step 1: Received input.")
-        log.append(f"Prompt: {prompt}")
-
         if script:
-            log.append("✍️ Step 2: Custom script received.")
+            log.append("✍️ Custom script provided.")
         else:
-            log.append("✍️ Step 2: No custom script provided, will autogenerate.")
+            log.append("🗣️ No custom script. Using auto-generated.")
 
         if face_image is not None:
-            log.append("🧑 Step 3: Face image uploaded and validated.")
-            assert isinstance(face_image, np.ndarray)
+            log.append("🧑 Face image uploaded. Deepfake mode ON.")
+            # TODO: Insert face-swapping logic here
         else:
-            log.append("⚠️ Step 3: No face image provided.")
+            log.append("🧑 No face image provided. Using default model.")
 
         if voice_audio is not None:
-            log.append("🎤 Step 4: Voice audio uploaded.")
+            log.append("🔊 Voice audio uploaded. Cloning voice.")
+            # TODO: Insert voice cloning logic here
         else:
-            log.append("⚠️ Step 4: No voice audio provided.")
+            log.append("🔊 No voice provided. Using default voice.")
 
-        # Simulate generation process (to be replaced with real model calls)
-        log.append("🎞️ Step 5: Starting video generation simulation...")
-        with open(output_path, "wb") as f:
-            f.write(b"FAKE_VIDEO_CONTENT")
-        log.append("✅ Step 6: Video successfully generated and saved.")
+        # Simulate video generation
+        log.append("🎞️ Generating video (placeholder in current build)...")
+        with open(video_path, "wb") as f:
+            f.write(b"FAKE VIDEO CONTENT")
 
-        return "\n".join(log), output_path
+        log.append("✅ Generation complete.")
+        return "\n".join(log), video_path
 
     except Exception as e:
-        log.append("❌ ERROR during generation:")
-        log.append(str(e))
+        log.append("❌ ERROR:")
         log.append(traceback.format_exc())
         return "\n".join(log), None
 
-iface = gr.Interface(
-    fn=generate_video,
-    inputs=[
-        gr.Textbox(label="Prompt (Required)"),
-        gr.Textbox(label="Optional Script"),
-        gr.Image(label="Optional Face Image", type="numpy", optional=True),
-        gr.Audio(label="Optional Voice Audio", type="filepath", optional=True)
-    ],
-    outputs=[
-        gr.Textbox(label="Process Log"),
-        gr.File(label="Download Generated Video")
-    ],
-    title="Aivideolab – NSFW AI Video Generator",
-    description="Upload a prompt, script, face image, or voice to generate a deepfake-style video. NSFW always enabled. Status logged clearly at each step."
-)
 
-iface.launch(server_name="0.0.0.0", server_port=7860)
+with gr.Blocks(title="Aivideolab – NSFW AI Video Generator") as demo:
+    gr.Markdown("## 🧪 Aivideolab – AI Video Generator (NSFW Capable)")
+    prompt = gr.Textbox(label="Prompt", placeholder="Enter your video prompt here")
+    script = gr.Textbox(label="Optional Script", placeholder="Type a custom script...")
+    face_image = gr.Image(label="Optional Face Image", type="numpy", optional=True)
+    voice_audio = gr.Audio(label="Optional Voice Audio", type="filepath", optional=True)
+
+    with gr.Row():
+        submit_btn = gr.Button("Generate")
+        clear_btn = gr.Button("Clear")
+
+    log_output = gr.Textbox(label="Process Log")
+    video_output = gr.File(label="Download Generated Video")
+
+    submit_btn.click(
+        generate_video,
+        inputs=[prompt, script, face_image, voice_audio],
+        outputs=[log_output, video_output],
+    )
+
+    clear_btn.click(
+        lambda: ("", None),
+        outputs=[log_output, video_output]
+    )
+
+demo.launch(server_name="0.0.0.0", server_port=7860)
