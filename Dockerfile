@@ -41,7 +41,7 @@ RUN mkdir -p /app/realesrgan && \
 # ------------------------
 RUN git clone https://github.com/megvii-research/ECCV2022-RIFE.git /app/rife && \
     cd /app/rife && \
-    wget https://github.com/megvii-research/ECCV2022-RIFE/releases/download/v1.0/RIFE_trained_model_HDv3.pkl
+    curl -L -o RIFE_trained_model_HDv3.pkl https://github.com/megvii-research/ECCV2022-RIFE/releases/download/v1.0/RIFE_trained_model_HDv3.pkl
 
 # ------------------------
 # Copy your application files
