@@ -16,3 +16,5 @@ python3 /app/run_ui.py --port 3000 --host 0.0.0.0 >> /app/startup.log 2>&1 || {
 # Stay alive even if the app crashes so we can read logs
 # Wait forever to keep container alive
 tail -f /dev/null
+
+echo "✅ launch.sh reached end of script" >> /app/startup.log
