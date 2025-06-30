@@ -1,4 +1,4 @@
-# Base image with Python
+# Use Python 3.10 base image
 FROM python:3.10-slim
 
 # Set working directory
@@ -7,24 +7,22 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
-    libsm6 \
-    libxext6 \
     git \
     curl \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy project files
-COPY . /app
-
 # Install Python dependencies
-RUN pip3 install --upgrade pip && \
-    pip3 install -r requirements.txt
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Make launch script executable
+# Copy the full app source code
+COPY . .
+
+# Make sure launch script is executable
 RUN chmod +x /app/launch.sh
 
-# Expose Gradio default port
+# Run the app
 EXPOSE 7860
-
-# Start the container using launch.sh
 CMD ["/app/launch.sh"]
