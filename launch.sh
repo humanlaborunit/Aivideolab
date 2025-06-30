@@ -1,11 +1,13 @@
 #!/bin/bash
-set -e
 
-echo "🚀 Launching Aivideolab..."
+echo "🚀 Starting Aivideolab container..."
 
-# Optional: update pip and install dependencies again in case of dynamic pods
-pip install --upgrade pip
-pip install -r requirements.txt
+# Show environment info
+echo "🔍 Python version:"
+python3 --version
+echo "📦 Installed packages:"
+pip3 list
 
-echo "📁 Starting server from run_ui.py..."
-python3 /app/run_ui.py
+# Launch Gradio app
+echo "🌐 Launching app on port 7860..."
+python3 run_ui.py --port 7860 --host 0.0.0.0
