@@ -1,36 +1,27 @@
-# Core
 gradio==4.25.0
 numpy==1.24.4
-Pillow==10.3.0
-requests==2.31.0
-tqdm==4.66.4
-ffmpeg-python==0.2.0
-openai-whisper==20231117
-
-# Video generation & manipulation
-moviepy==1.0.3
-imageio==2.34.0
-imageio-ffmpeg==0.4.9
-
-# Audio
-pydub==0.25.1
+Pillow==9.5.0
+opencv-python-headless==4.7.0.72
+scipy==1.10.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+transformers==4.36.2
+diffusers==0.25.0
+accelerate==0.21.0
+xformers==0.0.22
+sentencepiece==0.1.99
+gfpgan==1.3.8
+realesrgan==0.3.0
+gtts==2.5.1
 librosa==0.10.1
 soundfile==0.12.1
-pyannote.audio==2.1.1
-
-# Face and voice tools
-insightface==0.7.3
-torch==2.1.2
-torchaudio==2.1.2
-opencv-python==4.9.0.80
-
-# Voice cloning & synthesis
-TTS==0.22.0
-
-# NSFW filtering off by default
-# This entry ensures nothing blocks NSFW data
-
-# Misc
 python-dotenv==1.0.1
-scipy==1.12.0
-transformers==4.41.2
+scikit-image==0.21.0
+scikit-learn==1.3.0
+moviepy==1.0.3
+imageio==2.31.1
+numba==0.57.1
+mediapipe==0.10.3
+face-alignment==1.3.5
+psutil==5.9.5
