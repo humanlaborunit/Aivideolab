@@ -29,10 +29,8 @@ RUN git clone https://github.com/neuralchen/SimSwap.git /app/SimSwap && \
         https://github.com/neuralchen/SimSwap/releases/download/1.0/people_model.pth
 
 # ------------------------
-# Install Real-ESRGAN binary using HuggingFace tar.gz mirror (no unzip issues)
-RUN mkdir -p /app/realesrgan && \
-    curl -L -o /app/realesrgan/realesrgan.tar.gz https://huggingface.co/lambdalabs/realesrgan-ncnn/resolve/main/realesrgan-ncnn-vulkan-ubuntu.tar.gz && \
-    tar -xzf /app/realesrgan/realesrgan.tar.gz -C /app/realesrgan && \
+# Clone a fully unpacked Real-ESRGAN Vulkan repo (no zip or tar)
+RUN git clone https://huggingface.co/datasets/kjk4356/realesrgan-ncnn-vulkan /app/realesrgan && \
     chmod +x /app/realesrgan/realesrgan-ncnn-vulkan
 
 # ------------------------
