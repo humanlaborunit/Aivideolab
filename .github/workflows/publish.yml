@@ -1,25 +1,38 @@
-name: Make image public
+name: Publish to GHCR
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  make-public:
+  build-and-publish:
     runs-on: ubuntu-latest
-    steps:
-      - name: List packages and get package ID
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          PACKAGE_NAME="aivideolab"
-          PACKAGE_ID=$(gh api /user/packages/container/$PACKAGE_NAME/versions --jq '.[0].id')
-          echo "PACKAGE_ID=$PACKAGE_ID" >> $GITHUB_ENV
 
-      - name: Make package version public
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          echo "Making version $PACKAGE_ID public..."
-          gh api --method PATCH /user/packages/container/aivideolab/versions/$PACKAGE_ID \
-            -f visibility=public
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_TOKEN }}
+
+      - name: Set lowercase repo name
+        run: echo "REPO_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ env.REPO_NAME }}:latest
+          file: ./Dockerfile
 
