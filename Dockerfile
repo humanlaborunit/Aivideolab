@@ -7,19 +7,19 @@ WORKDIR /app
 # Install system packages
 # ------------------------
 RUN apt-get update && apt-get install -y \
-    python3 python3-pip git ffmpeg wget curl unzip \
-    libsm6 libxext6 libgl1 libglib2.0-0 \
-    cmake build-essential \
+    git ffmpeg libsm6 libxext6 libgl1 libglib2.0-0 \
+    curl wget unzip python3 python3-pip \
+    libsndfile1 libasound2 libavcodec-dev libavformat-dev libavdevice-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # ------------------------
-# Install Python deps
+# Copy requirements and install Python packages
 # ------------------------
 COPY requirements.txt .
 RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
 
 # ------------------------
-# Clone & install SimSwap
+# Clone SimSwap (Face Swap - CLI callable)
 # ------------------------
 RUN git clone https://github.com/neuralchen/SimSwap.git /app/SimSwap && \
     cd /app/SimSwap && \
@@ -31,7 +31,7 @@ RUN git clone https://github.com/neuralchen/SimSwap.git /app/SimSwap && \
         https://github.com/neuralchen/SimSwap/releases/download/1.0/people_model.pth
 
 # ------------------------
-# Download Real-ESRGAN binary
+# Download Real-ESRGAN binary (for enhancement)
 # ------------------------
 RUN wget https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan/releases/download/v0.1.5/realesrgan-ncnn-vulkan-20220424-ubuntu.zip && \
     unzip realesrgan-ncnn-vulkan-20220424-ubuntu.zip -d /app/realesrgan && \
@@ -45,7 +45,7 @@ RUN git clone https://github.com/megvii-research/ECCV2022-RIFE.git /app/rife && 
     wget https://github.com/megvii-research/ECCV2022-RIFE/releases/download/v1.0/RIFE_trained_model_HDv3.pkl
 
 # ------------------------
-# Copy full app code
+# Copy your application files
 # ------------------------
 COPY . /app
 
@@ -60,6 +60,6 @@ RUN chmod +x /app/launch.sh
 EXPOSE 3000
 
 # ------------------------
-# Start App
+# Launch the app
 # ------------------------
 CMD ["/app/launch.sh"]
