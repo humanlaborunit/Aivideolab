@@ -14,4 +14,5 @@ python3 /app/run_ui.py --port 3000 --host 0.0.0.0 >> /app/startup.log 2>&1 || {
 }
 
 # Stay alive even if the app crashes so we can read logs
-while true; do sleep 5; done
+# Wait forever to keep container alive
+tail -f /dev/null
