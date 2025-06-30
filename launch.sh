@@ -1,14 +1,11 @@
 #!/bin/bash
 
-echo "✅ Starting Aivideolab backend..."
+cd /workspace || cd / || exit
 
-# Clean up old video output (optional)
-mkdir -p /workspace/generated
-rm -f /workspace/generated/*.mp4
+echo "🚀 Launching Aivideolab – NSFW AI Video Engine..."
 
-echo "🔁 Installing dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+# Force logs to flush to screen
+export PYTHONUNBUFFERED=1
 
-echo "🚀 Launching Gradio app on 0.0.0.0:7860"
-python3 run_ui.py
+# Explicitly call the main script with forced Gradio HTTP config
+python3 run_ui.py --host 0.0.0.0 --port 7860 --nsfw --deepfake --script --voice
