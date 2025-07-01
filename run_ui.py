@@ -77,3 +77,8 @@ if __name__ == "__main__":
         print("❌ Fatal crash in Gradio UI launch. Trace written to /app/logs/fatal_ui_crash.txt")
         while True:
             pass  # Keep container alive for volume inspection
+            
+            import gradio as gr
+
+# At the end of the file:
+gr.Interface(...).launch(server_name="0.0.0.0", server_port=3000)
