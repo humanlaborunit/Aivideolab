@@ -61,4 +61,5 @@ EXPOSE 3000
 # ------------------------
 # Launch the app
 # ------------------------
+RUN chmod +x /app/launch.sh
 CMD ["/app/launch.sh"]
