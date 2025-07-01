@@ -19,6 +19,9 @@ def preprocess_voice(voice_sample_path):
     return tmp_file.name
 
 def clone_voice(script_text, voice_sample_path):
+    if voice_sample_path is None:
+        print("⚠️ No voice sample provided. Skipping voice cloning.")
+        return None
     try:
         clean_sample = preprocess_voice(voice_sample_path)
         output_path = f"cloned_voices/cloned_{uuid.uuid4()}.wav"
@@ -29,4 +32,5 @@ def clone_voice(script_text, voice_sample_path):
         )
         return output_path
     except Exception as e:
-        raise RuntimeError(f"Voice cloning failed: {e}")
+        print(f"❌ Voice cloning failed: {e}")
+        return None
