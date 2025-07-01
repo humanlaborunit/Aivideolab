@@ -4,9 +4,9 @@ class FallbackHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"This is the fallback HTTP server. Your main UI likely crashed.")
+        self.wfile.write(b"✅ HTTP is working! This proves port 3000 is live.")
 
 if __name__ == "__main__":
     server = HTTPServer(('0.0.0.0', 3000), FallbackHandler)
-    print("🛟 Fallback HTTP server running on port 3000...")
+    print("🟢 Basic fallback HTTP server running on port 3000...")
     server.serve_forever()
