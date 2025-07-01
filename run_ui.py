@@ -59,3 +59,21 @@ with gr.Blocks(css=".gradio-container { max-width: 100% !important; }") as demo:
     )
 
 demo.launch(server_port=3000, server_name="0.0.0.0")
+
+if __name__ == "__main__":
+    try:
+        demo.queue(concurrency_count=3).launch(
+            server_name="0.0.0.0",
+            server_port=3000,
+            share=False,
+            show_error=True,
+            show_tips=True,
+            prevent_thread_lock=True,
+        )
+    except Exception as e:
+        import traceback
+        with open("/app/logs/fatal_ui_crash.txt", "w") as f:
+            traceback.print_exc(file=f)
+        print("❌ Fatal crash in Gradio UI launch. Trace written to /app/logs/fatal_ui_crash.txt")
+        while True:
+            pass  # Keep container alive for volume inspection
