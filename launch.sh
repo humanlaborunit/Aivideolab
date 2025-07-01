@@ -2,7 +2,7 @@
 
 mkdir -p /app/logs
 
-echo "✅ HTTP Fallback launched at $(date)" > /app/logs/fallback_http.txt
+echo "Launching AI Video App..." | tee /app/logs/launch_log.txt
 
-# Start basic HTTP server to keep container and port alive
-python3 /app/fallback_http_server.py
+# Run main app and capture all logs
+python3 run_ui.py >> /app/logs/launch_log.txt 2>&1
