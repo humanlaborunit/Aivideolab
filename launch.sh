@@ -2,17 +2,7 @@
 
 mkdir -p /app/logs
 
-LOGFILE="/app/logs/startup_$(date +%Y%m%d_%H%M%S).log"
+echo "✅ HTTP Fallback launched at $(date)" > /app/logs/fallback_http.txt
 
-echo "⏳ Launching AI Video App..." > "$LOGFILE"
-date >> "$LOGFILE"
-
-# Attempt to run full app
-python3 run_ui.py >> "$LOGFILE" 2>&1 || {
-    echo "❌ Main app failed. Launching fallback server." >> "$LOGFILE"
-    python3 fallback_http_server.py >> "$LOGFILE" 2>&1
-}
-
-# Keep container alive
-echo "🛑 App exited or failed at $(date)" >> "$LOGFILE"
-sleep infinity
+# Start basic HTTP server to keep container and port alive
+python3 /app/fallback_http_server.py
