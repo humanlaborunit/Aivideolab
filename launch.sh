@@ -1,20 +1,18 @@
 #!/bin/bash
 
-echo "🚀 Starting launch script..." | tee /app/startup.log
+mkdir -p /app/logs
 
-python3 --version | tee -a /app/startup.log
+LOGFILE="/app/logs/startup_$(date +%Y%m%d_%H%M%S).log"
 
-echo "📁 Checking contents of /app:" | tee -a /app/startup.log
-ls -la /app >> /app/startup.log
+echo "⏳ Launching AI Video App..." > "$LOGFILE"
+date >> "$LOGFILE"
 
-echo "🎬 Attempting to run run_ui.py..." | tee -a /app/startup.log
-
-python3 /app/run_ui.py --port 3000 --host 0.0.0.0 >> /app/startup.log 2>&1 || {
-  echo "❌ Python app failed!" | tee -a /app/startup.log
+# Attempt to run full app
+python3 run_ui.py >> "$LOGFILE" 2>&1 || {
+    echo "❌ Main app failed. Launching fallback server." >> "$LOGFILE"
+    python3 fallback_http_server.py >> "$LOGFILE" 2>&1
 }
 
-# Stay alive even if the app crashes so we can read logs
-# Wait forever to keep container alive
-tail -f /dev/null
-
-echo "✅ launch.sh reached end of script" >> /app/startup.log
+# Keep container alive
+echo "🛑 App exited or failed at $(date)" >> "$LOGFILE"
+sleep infinity
