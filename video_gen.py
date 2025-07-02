@@ -9,15 +9,29 @@ Path("outputs").mkdir(exist_ok=True)
 Path("temp").mkdir(exist_ok=True)
 
 def generate_t2v_video(prompt):
+    prompt = prompt.strip()
+    if not prompt:
+        raise ValueError("Prompt is empty. Please enter a valid text prompt.")
+
     out_path = f"temp/{uuid.uuid4()}.mp4"
+
     try:
-        # Using ModelScope text-to-video pretrained model
-        subprocess.run([
+        cmd = [
             "python3", "-m", "modelscope.tools.cli", "infer",
             "--model_id=damo/text-to-video-synthesis",
-            f"--text={prompt}",
-            f"--output={out_path}"
-        ], check=True)
+            "--text", prompt,
+            "--output", out_path
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"T2V generation failed with exit code {result.returncode}.\n"
+                f"Command: {' '.join(cmd)}\n"
+                f"STDOUT:\n{result.stdout}\n"
+                f"STDERR:\n{result.stderr}"
+            )
+
         return out_path
     except Exception as e:
         raise RuntimeError(f"T2V generation failed: {e}")
