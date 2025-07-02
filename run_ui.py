@@ -14,9 +14,17 @@ def generate_video_ui(prompt, script, face_image, voice_sample):
     LOGS.clear()
     try:
         log("🧠 Starting generation process...")
-        log("📜 Step 1: Cloning voice...")
-        voice_path = clone_voice(script, voice_sample)
-        log(f"✅ Voice cloned: {voice_path}")
+
+        voice_path = None
+        if voice_sample:
+            log("📜 Step 1: Cloning voice...")
+            voice_path = clone_voice(script, voice_sample)
+            if voice_path:
+                log(f"✅ Voice cloned: {voice_path}")
+            else:
+                log("⚠️ Voice cloning skipped or failed.")
+        else:
+            log("⚠️ No voice sample provided — skipping voice cloning.")
 
         log("🎞 Step 2: Generating video from prompt...")
         base_video = generate_full_video(prompt, voice_path)
@@ -77,8 +85,3 @@ if __name__ == "__main__":
         print("❌ Fatal crash in Gradio UI launch. Trace written to /app/logs/fatal_ui_crash.txt")
         while True:
             pass  # Keep container alive for volume inspection
-            
-            import gradio as gr
-
-# At the end of the file:
-gr.Interface(...).launch(server_name="0.0.0.0", server_port=3000)
