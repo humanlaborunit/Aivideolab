@@ -6,20 +6,19 @@ echo "[launch.sh] Working directory: $(pwd)"
 echo "[launch.sh] Listing files:"
 ls -l
 
-# Install all Python dependencies with logging
+# Force install all dependencies with log
 echo "[launch.sh] Installing Python packages from requirements.txt..."
 pip install --no-cache-dir -r requirements.txt | tee install.log
 
-# Print Python version for debugging
+# Diagnostic - Check Python version and installed packages
 echo "[launch.sh] Python version:"
 python --version
 
-# Log installed packages
 echo "[launch.sh] Checking installed packages..."
 pip freeze | tee pip-freeze.log
 
-# Launch the Gradio app (don't pass --port unless your Python file parses it)
-echo "[launch.sh] Starting app..."
+# Start the Gradio app (DO NOT override port or server_name)
+echo "[launch.sh] Starting app using Python default settings..."
 python run_ui.py | tee gradio-launch.log
 
 echo "[launch.sh] App should now be running."
