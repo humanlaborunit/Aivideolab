@@ -29,15 +29,15 @@ def generate_video_ui(prompt, script, face_image, voice_sample):
 
         log("🎞 Step 2: Generating video from prompt...")
         base_video = generate_full_video(prompt, voice_path)
-        if not os.path.exists(base_video):
-            raise Exception("Generated video file not found.")
+        if not base_video or not os.path.exists(base_video):
+            raise Exception("❌ Video generation failed — file not found.")
         log(f"✅ Base video generated: {base_video}")
 
         if face_image:
             log("😶 Step 3: Running face swap...")
             swapped_video = run_face_swap(base_video, face_image)
-            if not os.path.exists(swapped_video):
-                raise Exception("Face swap output missing.")
+            if not swapped_video or not os.path.exists(swapped_video):
+                raise Exception("❌ Face swap failed — output not found.")
             log(f"✅ Face-swapped video created: {swapped_video}")
         else:
             swapped_video = base_video
@@ -46,7 +46,7 @@ def generate_video_ui(prompt, script, face_image, voice_sample):
         log("🎉 All steps completed successfully.")
         return swapped_video, log("✅ Done!")
     except Exception as e:
-        return None, log(f"❌ Error: {e}")
+        return None, log(f"❌ Error during generation: {e}")
 
 with gr.Blocks(css=".gradio-container { max-width: 100% !important; }") as demo:
     gr.Markdown("## 🎬 AI Video Generator (NSFW Enabled by Default)")
@@ -71,7 +71,7 @@ with gr.Blocks(css=".gradio-container { max-width: 100% !important; }") as demo:
         outputs=[output_video, logs_output]
     )
 
-# Force HTTP mode on 0.0.0.0:3000 for RunPod compatibility
+# 🚀 RunPod-compatible server start
 if __name__ == "__main__":
     try:
         demo.queue(concurrency_count=3).launch(
@@ -90,4 +90,4 @@ if __name__ == "__main__":
             traceback.print_exc(file=f)
         print("❌ Fatal crash in Gradio UI launch. Check /app/logs/fatal_ui_crash.txt")
         while True:
-            pass
+            pass  # Keep container alive for volume inspection
