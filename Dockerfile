@@ -1,27 +1,44 @@
 FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-WORKDIR /app
+WORKDIR /workspace
 
 # ------------------------
-# Install system packages
+# Step 1: Basic dependencies (split to avoid failure)
 # ------------------------
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    git ffmpeg libsm6 libxext6 libgl1 libglib2.0-0 \
-    curl wget unzip python3 python3-pip ca-certificates \
-    libsndfile1 libasound2 libavcodec-dev libavformat-dev libavdevice-dev && \
-    apt-get clean && \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        gnupg \
+        wget \
+        unzip && \
     rm -rf /var/lib/apt/lists/*
 
 # ------------------------
-# Copy requirements and install Python packages
+# Step 2: System packages
 # ------------------------
-COPY requirements.txt .
-RUN pip3 install --upgrade pip && pip3 install -r requirements.txt && pip3 install TTS==0.18.0
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        git ffmpeg libsm6 libxext6 libgl1 libglib2.0-0 \
+        python3 python3-pip libsndfile1 libasound2 && \
+    rm -rf /var/lib/apt/lists/*
 
 # ------------------------
-# Clone SimSwap (Face Swap - CLI callable)
+# Step 3: Copy everything to working dir
+# ------------------------
+COPY . .
+
+# ------------------------
+# Step 4: Install Python packages
+# ------------------------
+RUN pip3 install --upgrade pip && \
+    pip3 install -r requirements.txt && \
+    pip3 install TTS==0.18.0
+
+# ------------------------
+# Step 5: SimSwap model setup
 # ------------------------
 RUN git clone https://github.com/neuralchen/SimSwap.git SimSwap && \
     mkdir -p SimSwap/checkpoints && \
@@ -31,7 +48,7 @@ RUN git clone https://github.com/neuralchen/SimSwap.git SimSwap && \
         https://github.com/neuralchen/SimSwap/releases/download/1.0/people_model.pth
 
 # ------------------------
-# Download ESRGAN binary from reliable mirror
+# Step 6: Real-ESRGAN setup (binary mirror)
 # ------------------------
 RUN mkdir -p realesrgan && \
     curl -L -o realesrgan/realesrgan-ncnn-vulkan https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan-ncnn-vulkan && \
@@ -40,28 +57,18 @@ RUN mkdir -p realesrgan && \
     curl -L -o realesrgan/realesrgan.bin https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan.bin
 
 # ------------------------
-# Clone RIFE for frame interpolation
+# Step 7: RIFE interpolation model
 # ------------------------
 RUN git clone https://github.com/megvii-research/ECCV2022-RIFE.git rife && \
-    cd rife && \
-    curl -L -o RIFE_trained_model_HDv3.pkl https://github.com/megvii-research/ECCV2022-RIFE/releases/download/v1.0/RIFE_trained_model_HDv3.pkl
+    curl -L -o rife/RIFE_trained_model_HDv3.pkl https://github.com/megvii-research/ECCV2022-RIFE/releases/download/v1.0/RIFE_trained_model_HDv3.pkl
 
 # ------------------------
-# Copy all repo contents (including launch.sh) into /app
-# ------------------------
-COPY . .
-
-# ------------------------
-# Make launch.sh executable
+# Step 8: Make launch script executable
 # ------------------------
 RUN chmod +x launch.sh && ls -l launch.sh
 
 # ------------------------
-# Expose Gradio port
+# Step 9: Expose port and launch
 # ------------------------
 EXPOSE 3000
-
-# ------------------------
-# Start app using launch.sh in repo root
-# ------------------------
 CMD ["./launch.sh"]
