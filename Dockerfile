@@ -6,11 +6,13 @@ WORKDIR /app
 # ------------------------
 # Install system packages
 # ------------------------
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     git ffmpeg libsm6 libxext6 libgl1 libglib2.0-0 \
-    curl wget unzip python3 python3-pip \
-    libsndfile1 libasound2 libavcodec-dev libavformat-dev libavdevice-dev \
-    && rm -rf /var/lib/apt/lists/*
+    curl wget unzip python3 python3-pip ca-certificates \
+    libsndfile1 libasound2 libavcodec-dev libavformat-dev libavdevice-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # ------------------------
 # Copy requirements and install Python packages
