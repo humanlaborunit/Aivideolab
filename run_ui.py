@@ -2,6 +2,8 @@ import gradio as gr
 from video_gen import generate_full_video
 from voice_clone import clone_voice
 from face_swap import run_face_swap
+import os
+import traceback
 
 LOGS = []
 
@@ -40,6 +42,7 @@ def generate_video_ui(prompt, script, face_image, voice_sample):
 
         log("🎉 All steps completed.")
         return swapped_video, log("✅ Done!")
+
     except Exception as e:
         return None, log(f"❌ Error: {e}")
 
@@ -57,7 +60,7 @@ with gr.Blocks(css=".gradio-container { max-width: 100% !important; }") as demo:
     with gr.Row():
         generate_btn = gr.Button("Generate Video")
         output_video = gr.Video(label="📤 Final Video Output")
-    
+
     logs_output = gr.Textbox(label="🔍 Logs / Progress", lines=15)
 
     generate_btn.click(
@@ -66,6 +69,7 @@ with gr.Blocks(css=".gradio-container { max-width: 100% !important; }") as demo:
         outputs=[output_video, logs_output]
     )
 
+# 🔥 Force Gradio to always launch HTTP and expose port 3000
 if __name__ == "__main__":
     try:
         demo.queue(concurrency_count=3).launch(
@@ -74,12 +78,11 @@ if __name__ == "__main__":
             share=False,
             show_error=True,
             show_tips=True,
-            prevent_thread_lock=True,
+            prevent_thread_lock=True
         )
     except Exception as e:
-        import traceback
         with open("/app/logs/fatal_ui_crash.txt", "w") as f:
             traceback.print_exc(file=f)
         print("❌ Fatal crash in Gradio UI launch. Trace written to /app/logs/fatal_ui_crash.txt")
         while True:
-            pass  # Keeps container alive for volume inspection
+            pass
