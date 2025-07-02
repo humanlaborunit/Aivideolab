@@ -50,4 +50,38 @@ def combine_audio(video_path, audio_path):
 def generate_full_video(prompt, voice_path):
     video_path = generate_t2v_video(prompt)
     final_video_path = combine_audio(video_path, voice_path)
+    
     return final_video_path
+    
+    def generate_t2v_video(prompt):
+    prompt = prompt.strip()
+    if not prompt:
+        raise ValueError("Prompt is empty. Please enter a valid text prompt.")
+
+    out_path = f"temp/{uuid.uuid4()}.mp4"
+
+    try:
+        cmd = [
+            "python3", "-m", "modelscope.tools.cli", "infer",
+            "--model_id=damo/text-to-video-synthesis",
+            "--text", prompt,
+            "--output", out_path
+        ]
+
+        # Capture full stdout and stderr
+        process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        if process.returncode != 0:
+            error_message = (
+                f"T2V generation failed.\n"
+                f"Command: {' '.join(cmd)}\n"
+                f"Exit Code: {process.returncode}\n\n"
+                f"STDOUT:\n{process.stdout}\n\n"
+                f"STDERR:\n{process.stderr}"
+            )
+            raise RuntimeError(error_message)
+
+        return out_path
+
+    except Exception as e:
+        raise RuntimeError(f"T2V generation failed: {e}")
