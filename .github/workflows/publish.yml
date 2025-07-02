@@ -28,6 +28,9 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Make launch.sh executable ✅
+      run: chmod +x launch.sh
+
     - name: Build Docker image
       run: |
         docker build -t ghcr.io/${{ github.repository_owner }}/aivideolab:latest .
