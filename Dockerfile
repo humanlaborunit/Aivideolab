@@ -21,37 +21,38 @@ RUN pip3 install --upgrade pip && pip3 install -r requirements.txt && pip3 insta
 # ------------------------
 # Clone SimSwap (Face Swap - CLI callable)
 # ------------------------
-RUN git clone https://github.com/neuralchen/SimSwap.git /app/SimSwap && \
-    mkdir -p /app/SimSwap/checkpoints && \
-    curl -L -o /app/SimSwap/checkpoints/arcface_checkpoint.tar \
+RUN git clone https://github.com/neuralchen/SimSwap.git SimSwap && \
+    mkdir -p SimSwap/checkpoints && \
+    curl -L -o SimSwap/checkpoints/arcface_checkpoint.tar \
         https://github.com/neuralchen/SimSwap/releases/download/1.0/arcface_checkpoint.tar && \
-    curl -L -o /app/SimSwap/checkpoints/people_model.pth \
+    curl -L -o SimSwap/checkpoints/people_model.pth \
         https://github.com/neuralchen/SimSwap/releases/download/1.0/people_model.pth
 
 # ------------------------
 # Download ESRGAN binary from reliable mirror
-RUN mkdir -p /app/realesrgan && \
-    curl -L -o /app/realesrgan/realesrgan-ncnn-vulkan https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan-ncnn-vulkan && \
-    chmod +x /app/realesrgan/realesrgan-ncnn-vulkan && \
-    curl -L -o /app/realesrgan/realesrgan.param https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan.param && \
-    curl -L -o /app/realesrgan/realesrgan.bin https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan.bin
+# ------------------------
+RUN mkdir -p realesrgan && \
+    curl -L -o realesrgan/realesrgan-ncnn-vulkan https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan-ncnn-vulkan && \
+    chmod +x realesrgan/realesrgan-ncnn-vulkan && \
+    curl -L -o realesrgan/realesrgan.param https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan.param && \
+    curl -L -o realesrgan/realesrgan.bin https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan.bin
 
 # ------------------------
 # Clone RIFE for frame interpolation
 # ------------------------
-RUN git clone https://github.com/megvii-research/ECCV2022-RIFE.git /app/rife && \
-    cd /app/rife && \
+RUN git clone https://github.com/megvii-research/ECCV2022-RIFE.git rife && \
+    cd rife && \
     curl -L -o RIFE_trained_model_HDv3.pkl https://github.com/megvii-research/ECCV2022-RIFE/releases/download/v1.0/RIFE_trained_model_HDv3.pkl
 
 # ------------------------
-# Copy your application files
+# Copy all repo contents (including launch.sh) into /app
 # ------------------------
-COPY . /app
+COPY . .
 
 # ------------------------
-# Make launch script executable
+# Make launch.sh executable
 # ------------------------
-RUN chmod 755 /app/launch.sh && ls -l /app/launch.sh
+RUN chmod +x launch.sh && ls -l launch.sh
 
 # ------------------------
 # Expose Gradio port
@@ -59,7 +60,6 @@ RUN chmod 755 /app/launch.sh && ls -l /app/launch.sh
 EXPOSE 3000
 
 # ------------------------
-# Launch the app
+# Start app using launch.sh in repo root
 # ------------------------
-RUN chmod +x /app/launch.sh
-CMD ["/app/launch.sh"]
+CMD ["./launch.sh"]
