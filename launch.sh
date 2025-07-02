@@ -1,33 +1,24 @@
 #!/bin/bash
+set -e
 
-echo "🔁 Launch script starting..."
+echo "[launch.sh] Starting container at $(date)"
+echo "[launch.sh] Working directory: $(pwd)"
+echo "[launch.sh] Listing files:"
+ls -l
 
-# Ensure Python is available
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python3 not found! Exiting."
-    exit 1
-fi
+# Force install all dependencies with log
+echo "[launch.sh] Installing Python packages from requirements.txt..."
+pip install --no-cache-dir -r requirements.txt | tee install.log
 
-# Activate virtual environment if one exists
-if [ -d ".venv" ]; then
-    echo "📦 Activating virtual environment..."
-    source .venv/bin/activate
-fi
+# Diagnostic - Check Python version and installed packages
+echo "[launch.sh] Python version:"
+python --version
 
-# Check for log directory
-mkdir -p /app/logs
+echo "[launch.sh] Checking installed packages..."
+pip freeze | tee pip-freeze.log
 
-# Run the Gradio UI and log everything
-echo "🚀 Launching Gradio UI at http://0.0.0.0:3000..." | tee /app/logs/boot.log
+# Start the Gradio app and listen on port 3000
+echo "[launch.sh] Starting app..."
+python run_ui.py --port 3000 --share | tee gradio-launch.log
 
-python3 /app/run_ui.py >> /app/logs/boot.log 2>&1 || {
-    echo "❌ Gradio UI crashed. Dumping traceback..." | tee -a /app/logs/boot.log
-    echo "----------------------------------------" >> /app/logs/boot.log
-    python3 -c 'import traceback; traceback.print_exc()' >> /app/logs/boot.log 2>&1
-    echo "❌ Fatal crash logged to /app/logs/boot.log"
-}
-
-# Keep container alive if Gradio fails
-while true; do
-    sleep 30
-done
+echo "[launch.sh] App should now be running."
