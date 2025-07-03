@@ -6,12 +6,16 @@ WORKDIR /app
 # ------------------------
 # Install system packages
 # ------------------------
-RUN apt-get update && apt-get install -y \
-    python3 python3-pip git ffmpeg curl wget unzip libgl1 libglib2.0-0 libsm6 libxext6 libsndfile1 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    git ffmpeg libsm6 libxext6 libgl1 libglib2.0-0 \
+    curl wget unzip python3 python3-pip ca-certificates \
+    libsndfile1 libasound2 libavcodec-dev libavformat-dev libavdevice-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # ------------------------
-# Copy Python files and install requirements
+# Copy requirements and install Python packages
 # ------------------------
 COPY requirements.txt .
 RUN pip3 install --upgrade pip && \
@@ -19,15 +23,17 @@ RUN pip3 install --upgrade pip && \
     pip3 install TTS==0.18.0
 
 # ------------------------
-# Clone SimSwap
+# Clone SimSwap (Face Swap - CLI callable)
 # ------------------------
 RUN git clone https://github.com/neuralchen/SimSwap.git /app/SimSwap && \
     mkdir -p /app/SimSwap/checkpoints && \
-    curl -L -o /app/SimSwap/checkpoints/arcface_checkpoint.tar https://github.com/neuralchen/SimSwap/releases/download/1.0/arcface_checkpoint.tar && \
-    curl -L -o /app/SimSwap/checkpoints/people_model.pth https://github.com/neuralchen/SimSwap/releases/download/1.0/people_model.pth
+    curl -L -o /app/SimSwap/checkpoints/arcface_checkpoint.tar \
+        https://github.com/neuralchen/SimSwap/releases/download/1.0/arcface_checkpoint.tar && \
+    curl -L -o /app/SimSwap/checkpoints/people_model.pth \
+        https://github.com/neuralchen/SimSwap/releases/download/1.0/people_model.pth
 
 # ------------------------
-# Real-ESRGAN
+# Download ESRGAN binary
 # ------------------------
 RUN mkdir -p /app/realesrgan && \
     curl -L -o /app/realesrgan/realesrgan-ncnn-vulkan https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan-ncnn-vulkan && \
@@ -36,14 +42,14 @@ RUN mkdir -p /app/realesrgan && \
     curl -L -o /app/realesrgan/realesrgan.bin https://raw.githubusercontent.com/humanlaborunit/video-mirror/main/realesrgan.bin
 
 # ------------------------
-# RIFE
+# Clone RIFE for frame interpolation
 # ------------------------
 RUN git clone https://github.com/megvii-research/ECCV2022-RIFE.git /app/rife && \
     cd /app/rife && \
     curl -L -o RIFE_trained_model_HDv3.pkl https://github.com/megvii-research/ECCV2022-RIFE/releases/download/v1.0/RIFE_trained_model_HDv3.pkl
 
 # ------------------------
-# Copy your app code
+# Copy your application code into /app
 # ------------------------
 COPY . /app
 
@@ -58,6 +64,6 @@ RUN chmod +x /app/launch.sh
 EXPOSE 3000
 
 # ------------------------
-# Start the app
+# Start the container
 # ------------------------
 CMD ["/app/launch.sh"]
